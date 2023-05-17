@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/hex"
 	"github.com/sirupsen/logrus"
 	"os"
 )
@@ -29,4 +30,10 @@ func CheckErrorExec(err error, f func()) {
 	if err != nil {
 		f()
 	}
+}
+
+func HexToStr(hex1 string) string {
+	d, _ := hex.DecodeString(hex1)
+	d, _ = gbkToUtf8(d)
+	return string(d)
 }

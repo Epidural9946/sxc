@@ -12,8 +12,6 @@ import (
 	"zpaul.org/chd/sxc/util"
 )
 
-var Token = ""
-
 type data string
 
 func (d *data) Write(p []byte) (n int, err error) {
@@ -37,7 +35,7 @@ type PushPlus struct {
 //go:embed pushplus.html
 var htmlContent embed.FS
 
-func PushPlusExec(message util.XCAutoLog) {
+func PushPlusExec(token string, message util.XCAutoLog) {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Warn(err) // 将 interface{} 转型为具体类型。
@@ -50,7 +48,7 @@ func PushPlusExec(message util.XCAutoLog) {
 	util.CheckError(err)
 	err = t.ExecuteTemplate(&d, "CHD", message)
 	util.CheckError(err)
-	body := PushPlus{Token: Token, Title: message.Name, Content: string(d), Template: "html", Channel: "wechat"}
+	body := PushPlus{Token: token, Title: message.Name, Content: string(d), Template: "html", Channel: "wechat"}
 	marshal, _ := json.Marshal(body)
 	request, _ := http.NewRequest("POST", "http://www.pushplus.plus/send", strings.NewReader(string(marshal)))
 	request.Header.Add("Content-Type", "application/json")

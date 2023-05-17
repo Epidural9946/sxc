@@ -12,9 +12,15 @@ import (
 )
 
 type Config struct {
-	Token  string   `yaml:"token"`
-	Path   string   `yaml:"path"`
-	Ignore []string `yaml:"ignore"`
+	DefaultConfig struct {
+		Ignore []string `yaml:"ignore"`
+		Path   string   `yaml:"path"`
+	} `yaml:"default"`
+	Accounts []struct {
+		Token  string   `yaml:"token"`
+		Name   []string `yaml:"name"`
+		Ignore []string `yaml:"ignore"`
+	} `yaml:"accounts"`
 }
 
 var logger = logrus.New()
@@ -27,26 +33,6 @@ func init() {
 
 func main() {
 	systray.Run(onReady, onExit)
-	//type Config struct {
-	//	DefaultConfig struct {
-	//		Ignore []string `yaml:"ignore"`
-	//		Path   string   `yaml:"path"`
-	//	} `yaml:"default"`
-	//	Accounts []struct {
-	//		Token  string   `yaml:"token"`
-	//		Name   []string `yaml:"name"`
-	//		Ignore []string `yaml:"ignore"`
-	//	} `yaml:"accounts"`
-	//}
-	//
-	//path, err := os.Getwd()
-	//util.CheckError(err)
-	//file, err := os.ReadFile(filepath.Join(path, "1config.yml"))
-	//util.CheckError(err)
-	//var c Config
-	//err = yaml.Unmarshal(file, &c)
-	//util.CheckError(err)
-	//logger.Println(c)
 }
 
 func onReady() {
@@ -56,8 +42,17 @@ func onReady() {
 	mQuit := systray.AddMenuItem("关闭", "关闭")
 	mQuit.SetIcon(icon.Data)
 	c := getConfig()
-	service.Token = c.Token
-	service.Listen(c.Path, service.PushPlusExec)
+	for _, account := range c.Accounts {
+		for _, name := range account.Name {
+			ignore := append(c.DefaultConfig.Ignore, account.Ignore...)
+			strName := util.HexToStr(name)
+			logger.Infof("Account: %s, Token: %s, ignore: %s", strName, account.Token, ignore)
+			service.Listen(filepath.Join(c.DefaultConfig.Path, name), ignore, func(message util.XCAutoLog) {
+				message.Account = strName
+				service.PushPlusExec(account.Token, message)
+			})
+		}
+	}
 	// 监听退出菜单项的点击事件
 	go func() {
 		<-mQuit.ClickedCh
@@ -66,14 +61,13 @@ func onReady() {
 }
 
 func getConfig() Config {
-
-	path, err := os.Getwd()
-	util.CheckError(err)
-	file, err := os.ReadFile(filepath.Join(path, "config.yml"))
-	util.CheckError(err)
+	path, e := os.Getwd()
+	util.CheckError(e)
+	file, e := os.ReadFile(filepath.Join(path, "config.yml"))
+	util.CheckError(e)
 	var c Config
-	err = yaml.Unmarshal(file, &c)
-	util.CheckError(err)
+	e = yaml.Unmarshal(file, &c)
+	util.CheckError(e)
 	return c
 }
 
