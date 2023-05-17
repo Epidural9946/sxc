@@ -70,7 +70,7 @@ func addAccountDateDirWatch(sc <-chan string, ignore []string, exec func(message
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write && !contains(c, event.Name) {
 					autoLog := util.ParseAutoLog(event.Name)
-					if !contains(ignore, autoLog.Name) {
+					if contains(ignore, autoLog.Name) {
 						continue
 					}
 					c = append(c, event.Name)
