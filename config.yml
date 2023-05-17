@@ -1,2 +1,13 @@
-token: 
-path: 
+default:
+  ignore:
+    - 火山珊瑚
+    - 自动存入ELY
+    - 时空血脉
+    - 购买人品药剂
+  path:
+accounts:
+  - token:
+    name:
+      -
+    ignore:
+      - 索拉城斗兽场
