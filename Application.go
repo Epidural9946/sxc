@@ -11,6 +11,12 @@ import (
 	"zpaul.org/chd/sxc/util"
 )
 
+type Config struct {
+	Token  string   `yaml:"token"`
+	Path   string   `yaml:"path"`
+	Ignore []string `yaml:"ignore"`
+}
+
 var logger = logrus.New()
 
 func init() {
@@ -49,9 +55,9 @@ func onReady() {
 	systray.SetTooltip("Bug 小工具")
 	mQuit := systray.AddMenuItem("关闭", "关闭")
 	mQuit.SetIcon(icon.Data)
-	token, path := getConfig()
-	service.Token = token
-	service.Listen(path, service.PushPlusExec)
+	c := getConfig()
+	service.Token = c.Token
+	service.Listen(c.Path, service.PushPlusExec)
 	// 监听退出菜单项的点击事件
 	go func() {
 		<-mQuit.ClickedCh
@@ -59,11 +65,8 @@ func onReady() {
 	}()
 }
 
-func getConfig() (string, string) {
-	type Config struct {
-		Token string `yaml:"token"`
-		Path  string `yaml:"path"`
-	}
+func getConfig() Config {
+
 	path, err := os.Getwd()
 	util.CheckError(err)
 	file, err := os.ReadFile(filepath.Join(path, "config.yml"))
@@ -71,7 +74,7 @@ func getConfig() (string, string) {
 	var c Config
 	err = yaml.Unmarshal(file, &c)
 	util.CheckError(err)
-	return c.Token, c.Path
+	return c
 }
 
 func onExit() {

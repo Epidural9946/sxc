@@ -18,10 +18,10 @@ func init() {
 	logger.SetLevel(logrus.InfoLevel)
 }
 
-func Listen(path string, exec func(message util.XCAutoLog)) {
+func Listen(path string, ignore []string, exec func(message util.XCAutoLog)) {
 	sc := make(chan string)
 	go addAccountRootDirWatch(path, sc)
-	go addAccountDateDirWatch(sc, exec)
+	go addAccountDateDirWatch(sc, ignore, exec)
 }
 
 // addDirWatch 监听账号下的 Log 根目录监听
@@ -55,7 +55,7 @@ func addAccountRootDirWatch(path string, sc chan<- string) {
 	}
 }
 
-func addAccountDateDirWatch(sc <-chan string, exec func(message util.XCAutoLog)) {
+func addAccountDateDirWatch(sc <-chan string, ignore []string, exec func(message util.XCAutoLog)) {
 	// Create new watcher.
 	watcher, err := fsnotify.NewWatcher()
 	defer watcher.Close()
@@ -69,8 +69,12 @@ func addAccountDateDirWatch(sc <-chan string, exec func(message util.XCAutoLog))
 					return
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write && !contains(c, event.Name) {
+					autoLog := util.ParseAutoLog(event.Name)
+					if !contains(ignore, autoLog.Name) {
+						continue
+					}
 					c = append(c, event.Name)
-					exec(util.ParseAutoLog(event.Name))
+					exec(autoLog)
 				}
 			case _err, ok := <-watcher.Errors:
 				if !ok {
