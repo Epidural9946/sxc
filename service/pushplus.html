@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<h2>副本基础信息</h2>
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">操作</th>
+        <th scope="col">结果</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th scope="row">1</th>
+        <td>脚本名称</td>
+        <td>{{.Name}}</td>
+    </tr>
+    <tr>
+        <th scope="row">2</th>
+        <td>耗时</td>
+        <td>{{.TimeCons}} min</td>
+    </tr>
+    <tr>
+        <th scope="row">3</th>
+        <td>复活次数</td>
+        <td>{{.Revive}} 次</td>
+    </tr>
+    <tr>
+        <th scope="row">4</th>
+        <td>状态</td>
+        <td>{{.Msg}}</td>
+    </tr>
+    <tr>
+        <th scope="row">5</th>
+        <td>翻牌</td>
+        <td>
+            <ol>
+                {{ range .Card }}
+                <li>{{ . }}</li>
+                {{ end }}
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">6</th>
+        <td>图鉴激活</td>
+        <td>
+            <ol>
+                {{ range .Book }}
+                <li>{{ . }}</li>
+                {{ end }}
+            </ol>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h2>副本产出</h2>
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">道具</th>
+        <th scope="col">数量</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{ range $key, $value := .Acquisition }}
+    <tr>
+        <td>{{ $key }}</td>
+        <td>{{ $value }}</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+<h2>副本消耗</h2>
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">道具</th>
+        <th scope="col">数量</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{ range $key, $value := .Consumables }}
+    <tr>
+        <td>{{ $key }}</td>
+        <td>{{ $value }}</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+</body>
+</html>
