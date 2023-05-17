@@ -23,6 +23,7 @@ type Config struct {
 	} `yaml:"accounts"`
 }
 
+var version string
 var logger = logrus.New()
 
 func init() {
@@ -32,6 +33,7 @@ func init() {
 }
 
 func main() {
+	logger.Println(version)
 	systray.Run(onReady, onExit)
 }
 
@@ -42,6 +44,9 @@ func onReady() {
 	mQuit := systray.AddMenuItem("关闭", "关闭")
 	mQuit.SetIcon(icon.Data)
 	c := getConfig()
+	if c.Accounts == nil || len(c.Accounts) == 0 {
+		systray.Quit()
+	}
 	for _, account := range c.Accounts {
 		for _, name := range account.Name {
 			ignore := append(c.DefaultConfig.Ignore, account.Ignore...)
