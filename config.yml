@@ -1,13 +1,30 @@
+# V1.0.0
 default:
   ignore:
+    - #全部角色都需要忽略的脚本
     - 火山珊瑚
-    - 自动存入ELY
     - 时空血脉
+    - 自动存入ELY
     - 购买人品药剂
-  path:
+    - 索拉城斗兽场
+  path: # 小草 AutoLog 的文件夹  Ex C:\Users\Paul\.Plugin\SNXC\Log\AutoLog
+
 accounts:
-  - token:
+  # 第一个角色
+  - token: #PushPlus Token
     name:
-      -
+      - # AutoLog 文件夹里面的文件夹名称
     ignore:
-      - 索拉城斗兽场
+      - #需要针对角色忽略的脚本
+      # 第二个角色
+  - token: #PushPlus Token
+    name:
+      - # AutoLog 文件夹里面的文件夹名称
+    ignore:
+      - #需要针对角色忽略的脚本
+      # 第三个角色
+  - token: #PushPlus Token
+    name:
+      - # AutoLog 文件夹里面的文件夹名称
+    ignore:
+      - #需要针对角色忽略的脚本
