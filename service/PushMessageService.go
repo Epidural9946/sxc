@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"text/template"
 	"zpaul.org/chd/sxc/util"
@@ -50,18 +48,9 @@ func PushPlusExec(token string, message util.XCAutoLog) {
 	util.CheckError(err)
 	body := PushPlus{Token: token, Title: message.Name, Content: string(d), Template: "html", Channel: "wechat"}
 	marshal, _ := json.Marshal(body)
-	request, _ := http.NewRequest("POST", "http://www.pushplus.plus/send", strings.NewReader(string(marshal)))
+	request, _ := http.NewRequest("POST", "https://www.pushplus.plus/send", strings.NewReader(string(marshal)))
 	request.Header.Add("Content-Type", "application/json")
 	do, _ := http.DefaultClient.Do(request)
 	rBody, _ := io.ReadAll(do.Body)
 	logger.Println(string(rBody))
-}
-
-func getTemplate(name string) string {
-	root, err := os.Getwd()
-	util.CheckError(err)
-	filePath := filepath.Join(root, "template", name)
-	data, err := os.ReadFile(filePath)
-	util.CheckError(err)
-	return string(data)
 }
