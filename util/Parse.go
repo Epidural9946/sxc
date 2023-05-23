@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
@@ -16,7 +17,7 @@ type xcLog struct {
 	BeginTime string           `json:"begintime"`
 	EndTime   string           `json:"endtime"`
 	EndMsg    string           `json:"endmsg"`
-	Revive    []string         `json:"revive"`
+	Revive    []map[string]int `json:"revive"`
 	Item1     []map[string]int `json:"item1"`
 	Item2     []map[string]int `json:"item2"`
 	Msg       []string         `json:"msg"`
@@ -48,6 +49,7 @@ func parseNewVerContent(content string) XCAutoLog {
 	log := xcLog{}
 	err := json.Unmarshal([]byte(content), &log)
 	autoLog := XCAutoLog{}
+	CheckError(err)
 	if err != nil {
 		return autoLog
 	}
@@ -55,7 +57,18 @@ func parseNewVerContent(content string) XCAutoLog {
 	end, _ := strconv.ParseInt(log.EndTime, 10, 0)
 	autoLog.Name = log.Name
 	autoLog.TimeCons = (end - begin) / 10000000 / 60
-	autoLog.Revive = strconv.Itoa(len(log.Revive))
+	s := 0
+	c := 0
+	for _, item := range log.Revive {
+		for _, i := range item {
+			if i == 2 {
+				s++
+			} else if i == 0 {
+				c++
+			}
+		}
+	}
+	autoLog.Revive = fmt.Sprintf("%v/%v", c, s)
 	autoLog.Msg = log.EndMsg
 	autoLog.Acquisition = changeStruct(log.Item1)
 	autoLog.Consumables = changeStruct(log.Item2)
