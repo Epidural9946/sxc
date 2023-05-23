@@ -3,6 +3,7 @@ package service
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -46,7 +47,13 @@ func PushPlusExec(token string, message util.XCAutoLog) {
 	util.CheckError(err)
 	err = t.ExecuteTemplate(&d, "CHD", message)
 	util.CheckError(err)
-	body := PushPlus{Token: token, Title: message.Name, Content: string(d), Template: "html", Channel: "wechat"}
+	body := PushPlus{
+		Token:    token,
+		Title:    fmt.Sprintf("【%s】%s", message.Account, message.Name),
+		Content:  string(d),
+		Template: "html",
+		Channel:  "wechat",
+	}
 	marshal, _ := json.Marshal(body)
 	request, _ := http.NewRequest("POST", "https://www.pushplus.plus/send", strings.NewReader(string(marshal)))
 	request.Header.Add("Content-Type", "application/json")
