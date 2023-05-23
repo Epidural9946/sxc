@@ -13,22 +13,30 @@ import (
 )
 
 type xcLog struct {
-	Name      string           `json:"name"`
-	BeginTime string           `json:"begintime"`
-	EndTime   string           `json:"endtime"`
-	EndMsg    string           `json:"endmsg"`
-	Revive    []map[string]int `json:"revive"`
-	Item1     []map[string]int `json:"item1"`
-	Item2     []map[string]int `json:"item2"`
-	Msg       []string         `json:"msg"`
-	Card      []string         `json:"card"`
-	Collect   []string         `json:"collect"`
+	Name       string           `json:"name"`
+	BeginTime  string           `json:"begintime"`
+	EndTime    string           `json:"endtime"`
+	EndMsg     string           `json:"endmsg"`
+	BeginLevel int              `json:"beginlevel"`
+	BeginExp   int              `json:"beginexp"`
+	EndLevel   int              `json:"endlevel"`
+	EndExp     int              `json:"endexp"`
+	Revive     []map[string]int `json:"revive"`
+	Item1      []map[string]int `json:"item1"`
+	Item2      []map[string]int `json:"item2"`
+	Msg        []string         `json:"msg"`
+	Card       []string         `json:"card"`
+	Collect    []string         `json:"collect"`
 }
 
 type XCAutoLog struct {
-	Account     string         //账号
-	Name        string         //名称
-	TimeCons    int64          //耗时  ParseLog [10000000 = 1s]
+	Account     string //账号
+	Name        string //名称
+	TimeCons    int64  //耗时  ParseLog [10000000 = 1s]
+	BeginLevel  int
+	EndLevel    int
+	BeginExp    int64
+	EndExp      int64
 	Revive      string         //死亡次数
 	Msg         string         //消息
 	Acquisition map[string]int //获得品
@@ -48,15 +56,27 @@ func ParseAutoLog(path string) XCAutoLog {
 func parseNewVerContent(content string) XCAutoLog {
 	log := xcLog{}
 	err := json.Unmarshal([]byte(content), &log)
-	autoLog := XCAutoLog{}
 	CheckError(err)
 	if err != nil {
-		return autoLog
+		return XCAutoLog{}
 	}
-	begin, _ := strconv.ParseInt(log.BeginTime, 10, 0)
-	end, _ := strconv.ParseInt(log.EndTime, 10, 0)
-	autoLog.Name = log.Name
-	autoLog.TimeCons = (end - begin) / 10000000 / 60
+	return XCAutoLog{
+		Name:        log.Name,
+		Msg:         log.EndMsg,
+		BeginLevel:  log.BeginLevel,
+		EndLevel:    log.EndLevel,
+		BeginExp:    int64(log.BeginExp / 100),
+		EndExp:      int64(log.EndExp / 100),
+		TimeCons:    log.getTimeCons(),
+		Revive:      log.getRevive(),
+		Acquisition: changeStruct(log.Item1),
+		Consumables: changeStruct(log.Item2),
+		Card:        log.Card,
+		Book:        log.Collect,
+	}
+}
+
+func (log *xcLog) getRevive() string {
 	s := 0
 	c := 0
 	for _, item := range log.Revive {
@@ -68,13 +88,13 @@ func parseNewVerContent(content string) XCAutoLog {
 			}
 		}
 	}
-	autoLog.Revive = fmt.Sprintf("%v/%v", c, s)
-	autoLog.Msg = log.EndMsg
-	autoLog.Acquisition = changeStruct(log.Item1)
-	autoLog.Consumables = changeStruct(log.Item2)
-	autoLog.Card = log.Card
-	autoLog.Book = log.Collect
-	return autoLog
+	return fmt.Sprintf("%v/%v", c, s)
+}
+
+func (log *xcLog) getTimeCons() int64 {
+	begin, _ := strconv.ParseInt(log.BeginTime, 10, 0)
+	end, _ := strconv.ParseInt(log.EndTime, 10, 0)
+	return (end - begin) / 10000000 / 60
 }
 
 func changeStruct(data []map[string]int) map[string]int {
