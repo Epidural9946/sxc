@@ -33,7 +33,7 @@ func init() {
 }
 
 func main() {
-	logger.Println(version)
+	logger.Infof("Ver: %s", version)
 	systray.Run(onReady, onExit)
 }
 

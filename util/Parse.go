@@ -35,8 +35,8 @@ type XCAutoLog struct {
 	TimeCons    int64  //耗时  ParseLog [10000000 = 1s]
 	BeginLevel  int
 	EndLevel    int
-	BeginExp    int64
-	EndExp      int64
+	BeginExp    float32
+	EndExp      float32
 	Revive      string         //死亡次数
 	Msg         string         //消息
 	Acquisition map[string]int //获得品
@@ -65,8 +65,8 @@ func parseNewVerContent(content string) XCAutoLog {
 		Msg:         log.EndMsg,
 		BeginLevel:  log.BeginLevel,
 		EndLevel:    log.EndLevel,
-		BeginExp:    int64(log.BeginExp / 100),
-		EndExp:      int64(log.EndExp / 100),
+		BeginExp:    float32(log.BeginExp) / 100,
+		EndExp:      float32(log.EndExp) / 100,
 		TimeCons:    log.getTimeCons(),
 		Revive:      log.getRevive(),
 		Acquisition: changeStruct(log.Item1),
