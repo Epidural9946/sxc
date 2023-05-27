@@ -60,20 +60,7 @@ func parseNewVerContent(content string) XCAutoLog {
 	if err != nil {
 		return XCAutoLog{}
 	}
-	return XCAutoLog{
-		Name:        log.Name,
-		Msg:         log.EndMsg,
-		BeginLevel:  log.BeginLevel,
-		EndLevel:    log.EndLevel,
-		BeginExp:    float32(log.BeginExp) / 100,
-		EndExp:      float32(log.EndExp) / 100,
-		TimeCons:    log.getTimeCons(),
-		Revive:      log.getRevive(),
-		Acquisition: changeStruct(log.Item1),
-		Consumables: changeStruct(log.Item2),
-		Card:        log.Card,
-		Book:        log.Collect,
-	}
+	return log.getXCAutoLog()
 }
 
 func (log *xcLog) getRevive() string {
@@ -89,6 +76,22 @@ func (log *xcLog) getRevive() string {
 		}
 	}
 	return fmt.Sprintf("%v/%v", c, s)
+}
+func (log *xcLog) getXCAutoLog() XCAutoLog {
+	return XCAutoLog{
+		Name:        log.Name,
+		Msg:         log.EndMsg,
+		BeginLevel:  log.BeginLevel,
+		EndLevel:    log.EndLevel,
+		BeginExp:    float32(log.BeginExp) / 100,
+		EndExp:      float32(log.EndExp) / 100,
+		TimeCons:    log.getTimeCons(),
+		Revive:      log.getRevive(),
+		Acquisition: changeStruct(log.Item1),
+		Consumables: changeStruct(log.Item2),
+		Card:        log.Card,
+		Book:        log.Collect,
+	}
 }
 
 func (log *xcLog) getTimeCons() int64 {
