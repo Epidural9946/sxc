@@ -6,7 +6,6 @@ require (
 	github.com/dstotijn/go-notion v0.11.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getlantern/systray v1.2.2
-	github.com/sanity-io/litter v1.5.5
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/text v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
