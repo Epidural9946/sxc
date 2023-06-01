@@ -1,63 +1,121 @@
 package service
 
 import (
-	"embed"
+	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/dstotijn/go-notion"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"strings"
-	"text/template"
+	"time"
 	"zpaul.org/chd/sxc/util"
 )
 
-type data string
-
-func (d *data) Write(p []byte) (n int, err error) {
-	var s1 = string(p)
-	d2 := data(s1)
-	*d = *d + d2
-	return 0, nil
+type httpTransport struct {
+	w io.Writer
 }
 
-type PushPlus struct {
-	Token       string `json:"token"`
-	Title       string `json:"title"`
-	Content     string `json:"content"`
-	Template    string `json:"template"`
-	Channel     string `json:"channel"`
-	Webhook     string `json:"webhook"`
-	CallbackUrl string `json:"callbackUrl"`
-	Timestamp   string `json:"timestamp"`
+// RoundTrip implements http.RoundTripper. It multiplexes the read HTTP response
+// data to an io.Writer for debugging.
+func (t *httpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	res, err := http.DefaultTransport.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Body = io.NopCloser(io.TeeReader(res.Body, t.w))
+
+	return res, nil
 }
-
-//go:embed pushplus.html
-var htmlContent embed.FS
-
-func PushPlusExec(token string, message util.XCAutoLog) {
+func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Warn(err) // 将 interface{} 转型为具体类型。
 		}
 	}()
-	var d data = ""
-	pushPlusT, err := htmlContent.ReadFile("pushplus.html")
-	util.CheckError(err)
-	t, err := template.New("CHD").Parse(string(pushPlusT))
-	util.CheckError(err)
-	err = t.ExecuteTemplate(&d, "CHD", message)
-	util.CheckError(err)
-	body := PushPlus{
-		Token:    token,
-		Title:    fmt.Sprintf("【%s】%s", message.Account, message.Name),
-		Content:  string(d),
-		Template: "html",
-		Channel:  "wechat",
+	ctx := context.Background()
+	buf := &bytes.Buffer{}
+	httpClient := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: &httpTransport{w: buf},
 	}
-	marshal, _ := json.Marshal(body)
-	request, _ := http.NewRequest("POST", "https://www.pushplus.plus/send", strings.NewReader(string(marshal)))
-	request.Header.Add("Content-Type", "application/json")
-	do, _ := http.DefaultClient.Do(request)
-	rBody, _ := io.ReadAll(do.Body)
-	logger.Println(string(rBody))
+	client := notion.NewClient(apiKey, notion.WithHTTPClient(httpClient))
+
+	params := notion.CreatePageParams{
+		ParentType: notion.ParentTypePage,
+		ParentID:   parentPageID,
+		Title: []notion.RichText{
+			{
+				Text: &notion.Text{
+					Content: message.Name,
+				},
+			},
+		},
+		DatabasePageProperties: &notion.DatabasePageProperties{
+			"Name": notion.DatabasePageProperty{
+				Title: []notion.RichText{
+					{
+						Text: &notion.Text{
+							Content: message.Name,
+						},
+					},
+				},
+			},
+			"状态": notion.DatabasePageProperty{
+				RichText: []notion.RichText{
+					{
+						Text: &notion.Text{Content: message.Msg},
+					},
+				},
+			},
+			"角色名称": notion.DatabasePageProperty{
+				RichText: []notion.RichText{
+					{
+						Text: &notion.Text{Content: message.Account},
+					},
+				},
+			},
+			"原等级":  notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.BeginLevel))},
+			"原经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.BeginExp))},
+			"后等级":  notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.EndLevel))},
+			"后经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.EndExp))},
+			"回城复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive1))},
+			"苏生复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive2))},
+			"图鉴激活": notion.DatabasePageProperty{
+				RichText: []notion.RichText{
+					{
+						Text: &notion.Text{Content: strings.Join(message.Card, " ")},
+					},
+				},
+			},
+			"时长": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.TimeCons))},
+			"翻牌": notion.DatabasePageProperty{
+				RichText: []notion.RichText{
+					{
+						Text: &notion.Text{Content: strings.Join(message.Book, " ")},
+					},
+				},
+			},
+			"MaxLevel": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(1))},
+		},
+	}
+	_, err := client.CreatePage(ctx, params)
+	if err != nil {
+		log.Fatalf("Failed to create page: %v", err)
+	}
+
+	decoded := map[string]interface{}{}
+	if err := json.NewDecoder(buf).Decode(&decoded); err != nil {
+		log.Fatal(err)
+	}
+
+	// Pretty print JSON reponse.
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "    ")
+	if err := enc.Encode(decoded); err != nil {
+		log.Fatal(err)
+	}
 }

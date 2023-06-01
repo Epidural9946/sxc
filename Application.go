@@ -13,8 +13,10 @@ import (
 
 type Config struct {
 	DefaultConfig struct {
-		Ignore []string `yaml:"ignore"`
-		Path   string   `yaml:"path"`
+		Ignore     []string `yaml:"ignore"`
+		Path       string   `yaml:"path"`
+		Token      string   `yaml:"token"`
+		DatabaseId string   `yaml:"databaseId"`
 	} `yaml:"default"`
 	Accounts []struct {
 		Token  string   `yaml:"token"`
@@ -54,7 +56,7 @@ func onReady() {
 			logger.Infof("Account: %s, Token: %s, ignore: %s", strName, account.Token, ignore)
 			service.Listen(filepath.Join(c.DefaultConfig.Path, name), ignore, func(message util.XCAutoLog) {
 				message.Account = strName
-				service.PushPlusExec(account.Token, message)
+				service.PushPlusExec(c.DefaultConfig.Token, c.DefaultConfig.DatabaseId, message)
 			})
 		}
 	}

@@ -3,7 +3,6 @@ package util
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
@@ -35,9 +34,10 @@ type XCAutoLog struct {
 	TimeCons    int64  //耗时  ParseLog [10000000 = 1s]
 	BeginLevel  int
 	EndLevel    int
-	BeginExp    float32
-	EndExp      float32
-	Revive      string         //死亡次数
+	BeginExp    float64
+	EndExp      float64
+	Revive1     int            //苏生
+	Revive2     int            //城市
 	Msg         string         //消息
 	Acquisition map[string]int //获得品
 	Consumables map[string]int //消耗品
@@ -63,7 +63,7 @@ func parseNewVerContent(content string) XCAutoLog {
 	return log.getXCAutoLog()
 }
 
-func (log *xcLog) getRevive() string {
+func (log *xcLog) getRevive(i int) int {
 	s := 0
 	c := 0
 	for _, item := range log.Revive {
@@ -75,7 +75,11 @@ func (log *xcLog) getRevive() string {
 			}
 		}
 	}
-	return fmt.Sprintf("%v/%v", c, s)
+	if i == 1 {
+		return s
+	} else {
+		return c
+	}
 }
 func (log *xcLog) getXCAutoLog() XCAutoLog {
 	return XCAutoLog{
@@ -83,10 +87,11 @@ func (log *xcLog) getXCAutoLog() XCAutoLog {
 		Msg:         log.EndMsg,
 		BeginLevel:  log.BeginLevel,
 		EndLevel:    log.EndLevel,
-		BeginExp:    float32(log.BeginExp) / 100,
-		EndExp:      float32(log.EndExp) / 100,
+		BeginExp:    float64(log.BeginExp) / 100,
+		EndExp:      float64(log.EndExp) / 100,
 		TimeCons:    log.getTimeCons(),
-		Revive:      log.getRevive(),
+		Revive1:     log.getRevive(1),
+		Revive2:     log.getRevive(2),
 		Acquisition: changeStruct(log.Item1),
 		Consumables: changeStruct(log.Item2),
 		Card:        log.Card,
