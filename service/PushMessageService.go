@@ -3,12 +3,9 @@ package service
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/dstotijn/go-notion"
 	"io"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 	"zpaul.org/chd/sxc/util"
@@ -39,7 +36,7 @@ func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 	ctx := context.Background()
 	buf := &bytes.Buffer{}
 	httpClient := &http.Client{
-		Timeout:   10 * time.Second,
+		Timeout:   20 * time.Second,
 		Transport: &httpTransport{w: buf},
 	}
 	client := notion.NewClient(apiKey, notion.WithHTTPClient(httpClient))
@@ -79,15 +76,15 @@ func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 				},
 			},
 			"原等级":  notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.BeginLevel))},
-			"原经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.BeginExp))},
+			"原经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(message.BeginExp)},
 			"后等级":  notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.EndLevel))},
-			"后经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.EndExp))},
+			"后经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(message.EndExp)},
 			"回城复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive1))},
 			"苏生复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive2))},
 			"图鉴激活": notion.DatabasePageProperty{
 				RichText: []notion.RichText{
 					{
-						Text: &notion.Text{Content: strings.Join(message.Card, " ")},
+						Text: &notion.Text{Content: strings.Join(message.ToBooks(), " | ")},
 					},
 				},
 			},
@@ -95,27 +92,19 @@ func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 			"翻牌": notion.DatabasePageProperty{
 				RichText: []notion.RichText{
 					{
-						Text: &notion.Text{Content: strings.Join(message.Book, " ")},
+						Text: &notion.Text{Content: strings.Join(message.ToCards(), " | ")},
 					},
 				},
 			},
-			"MaxLevel": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(1))},
 		},
 	}
 	_, err := client.CreatePage(ctx, params)
-	if err != nil {
-		log.Fatalf("Failed to create page: %v", err)
+	util.CheckErrorExec(err, func(err error) {
+		logger.Warnf("Message: %s", message.Name)
+		logger.Warnf("Error  : %s", err)
+	})
+	if err == nil {
+		logger.Infof("成功发送：%s", message.Name)
 	}
 
-	decoded := map[string]interface{}{}
-	if err := json.NewDecoder(buf).Decode(&decoded); err != nil {
-		log.Fatal(err)
-	}
-
-	// Pretty print JSON reponse.
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "    ")
-	if err := enc.Encode(decoded); err != nil {
-		log.Fatal(err)
-	}
 }

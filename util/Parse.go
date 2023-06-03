@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -43,6 +44,25 @@ type XCAutoLog struct {
 	Consumables map[string]int //消耗品
 	Card        []string       //翻牌
 	Book        []string       //图鉴
+}
+
+func (x *XCAutoLog) ToBooks() []string {
+	l := make([]string, 0)
+	for _, item := range x.Book {
+		split := strings.Split(item, "成功激活图鉴 : ")
+		l = append(l, split[1])
+	}
+	return l
+}
+func (x *XCAutoLog) ToCards() []string {
+	l := make([]string, 0)
+	for _, item := range x.Card {
+		split := strings.Split(item, "领奖奖励:")
+		if len(split) == 2 {
+			l = append(l, split[1])
+		}
+	}
+	return l
 }
 
 func ParseAutoLog(path string) XCAutoLog {

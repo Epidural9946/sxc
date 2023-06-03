@@ -26,9 +26,9 @@ func CheckErrorF(err error) {
 	}
 }
 
-func CheckErrorExec(err error, f func()) {
+func CheckErrorExec(err error, f func(err error)) {
 	if err != nil {
-		f()
+		f(err)
 	}
 }
 

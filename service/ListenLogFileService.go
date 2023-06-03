@@ -44,8 +44,13 @@ func addAccountRootDirWatch(path string, sc chan<- string) {
 				return
 			}
 			if event.Has(fsnotify.Create) && !contains(c, event.Name) {
-				sc <- event.Name
-				logger.Println("Add New Paths {}", event.Name)
+				info, err := os.Stat(event.Name)
+				util.CheckError(err)
+				if info.IsDir() {
+					sc <- event.Name
+					logger.Println("Add New Paths {}", event.Name)
+				}
+
 			}
 		case err, ok := <-watcher.Errors:
 			if ok {
