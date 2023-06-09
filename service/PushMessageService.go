@@ -40,17 +40,10 @@ func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 		Transport: &httpTransport{w: buf},
 	}
 	client := notion.NewClient(apiKey, notion.WithHTTPClient(httpClient))
-
 	params := notion.CreatePageParams{
 		ParentType: notion.ParentTypePage,
 		ParentID:   parentPageID,
-		Title: []notion.RichText{
-			{
-				Text: &notion.Text{
-					Content: message.Name,
-				},
-			},
-		},
+		Title:      []notion.RichText{{Text: &notion.Text{Content: message.Name}}},
 		DatabasePageProperties: &notion.DatabasePageProperties{
 			"Name": notion.DatabasePageProperty{
 				Title: []notion.RichText{
@@ -97,6 +90,25 @@ func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 				},
 			},
 		},
+		Children: []notion.Block{
+			notion.Heading2Block{RichText: []notion.RichText{{Text: &notion.Text{Content: "产出"}}}},
+			notion.TableBlock{
+				TableWidth:      2,
+				HasColumnHeader: true,
+				Children:        util.HandleDataToTable(message.Acquisition),
+			},
+			notion.Heading2Block{RichText: []notion.RichText{{Text: &notion.Text{Content: "消耗"}}}},
+			notion.TableBlock{
+				TableWidth:      2,
+				HasColumnHeader: true,
+				Children:        util.HandleDataToTable(message.Consumables),
+			},
+			notion.Heading2Block{RichText: []notion.RichText{{Text: &notion.Text{Content: "日志"}}}},
+		},
+	}
+	_l := util.HandleDataToNumList(message.Log)
+	for _, text := range _l {
+		params.Children = append(params.Children, text)
 	}
 	_, err := client.CreatePage(ctx, params)
 	util.CheckErrorExec(err, func(err error) {

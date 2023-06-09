@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/dstotijn/go-notion"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
@@ -44,6 +45,7 @@ type XCAutoLog struct {
 	Consumables map[string]int //消耗品
 	Card        []string       //翻牌
 	Book        []string       //图鉴
+	Log         []string       //执行日志
 }
 
 func (x *XCAutoLog) ToBooks() []string {
@@ -116,6 +118,7 @@ func (log *xcLog) getXCAutoLog() XCAutoLog {
 		Consumables: changeStruct(log.Item2),
 		Card:        log.Card,
 		Book:        log.Collect,
+		Log:         log.Msg,
 	}
 }
 
@@ -145,4 +148,31 @@ func gbkToUtf8(s []byte) ([]byte, error) {
 		return nil, e
 	}
 	return d, nil
+}
+
+func HandleDataToTable(data map[string]int) []notion.Block {
+	r := make([]notion.Block, 0)
+	r = append(r, notion.TableRowBlock{
+		Cells: [][]notion.RichText{
+			{{Text: &notion.Text{Content: "道具"}}},
+			{{Text: &notion.Text{Content: "数量"}}},
+		},
+	})
+	for s, i := range data {
+		r = append(r, notion.TableRowBlock{
+			Cells: [][]notion.RichText{
+				{{Text: &notion.Text{Content: s}}},
+				{{Text: &notion.Text{Content: strconv.Itoa(i)}}},
+			},
+		})
+	}
+	return r
+}
+
+func HandleDataToNumList(str []string) []notion.BulletedListItemBlock {
+	numList := make([]notion.BulletedListItemBlock, 0)
+	for _, s := range str {
+		numList = append(numList, notion.BulletedListItemBlock{RichText: []notion.RichText{{Text: &notion.Text{Content: s}}}})
+	}
+	return numList
 }
