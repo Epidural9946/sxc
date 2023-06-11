@@ -72,8 +72,8 @@ func PushPlusExec(apiKey string, parentPageID string, message util.XCAutoLog) {
 			"原经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(message.BeginExp)},
 			"后等级":  notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.EndLevel))},
 			"后经验条": notion.DatabasePageProperty{Number: notion.Float64Ptr(message.EndExp)},
-			"回城复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive1))},
-			"苏生复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive2))},
+			"回城复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive2))},
+			"苏生复活": notion.DatabasePageProperty{Number: notion.Float64Ptr(float64(message.Revive1))},
 			"图鉴激活": notion.DatabasePageProperty{
 				RichText: []notion.RichText{
 					{
